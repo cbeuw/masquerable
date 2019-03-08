@@ -210,12 +210,7 @@ func main() {
 	if redirAddr == "" {
 		log.Fatal("Must specify redirAddr")
 	}
-	if bindAddr == "" {
-		log.Fatal("Must specify bindAddr")
-	}
-	if murmurAddr == "" {
-		log.Fatal("Must specify murmurAddr")
-	}
+
 	log.Printf("Listening on %v, Murmur on %v, Web on %v\n", bindAddr, murmurAddr, redirAddr)
 	sta := &server.State{
 		RedirAddr:  redirAddr,
