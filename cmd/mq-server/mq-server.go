@@ -103,7 +103,7 @@ func dispatchConnection(conn net.Conn, sta *server.State) {
 	goMs := func() {
 		pair, err := makeMsPipe(conn, sta)
 		if err != nil {
-			log.Printf("Making connection to Mumble server: %v\n", err)
+			log.Printf("Making connection to Murmur: %v\n", err)
 		}
 		go pair.remoteToServer()
 		go pair.serverToRemote()
@@ -170,7 +170,7 @@ func makeWebPipe(remote net.Conn, sta *server.State) (*webPair, error) {
 }
 
 func makeMsPipe(remote net.Conn, sta *server.State) (*msPair, error) {
-	conn, err := net.Dial("tcp", sta.MumbleAddr)
+	conn, err := net.Dial("tcp", sta.MurmurAddr)
 	if err != nil {
 		return &msPair{}, err
 	}
@@ -183,14 +183,14 @@ func makeMsPipe(remote net.Conn, sta *server.State) (*msPair, error) {
 
 func main() {
 	var redirAddr string
-	var mumbleAddr string
+	var murmurAddr string
 	var bindAddr string
 	var key string
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	flag.StringVar(&redirAddr, "r", "", "redirAddr: ip:port of the web server")
-	flag.StringVar(&mumbleAddr, "m", "127.0.0.1:64738", "mumbleAddr: ip:port of the mumble server")
+	flag.StringVar(&murmurAddr, "m", "127.0.0.1:64738", "murmurAddr: ip:port of the murmur server")
 	flag.StringVar(&bindAddr, "b", "0.0.0.0:443", "bindAddr: ip:port to bind and listen")
 	flag.StringVar(&key, "k", "test", "key: client must have the same key")
 	askVersion := flag.Bool("v", false, "Print the version number")
@@ -213,13 +213,13 @@ func main() {
 	if bindAddr == "" {
 		log.Fatal("Must specify bindAddr")
 	}
-	if mumbleAddr == "" {
-		log.Fatal("Must specify mumbleAddr")
+	if murmurAddr == "" {
+		log.Fatal("Must specify murmurAddr")
 	}
-	log.Printf("Listening on %v, Mumble on %v, Web on %v\n", bindAddr, mumbleAddr, redirAddr)
+	log.Printf("Listening on %v, Murmur on %v, Web on %v\n", bindAddr, murmurAddr, redirAddr)
 	sta := &server.State{
 		RedirAddr:  redirAddr,
-		MumbleAddr: mumbleAddr,
+		MurmurAddr: murmurAddr,
 		Key:        key,
 		Now:        time.Now,
 	}

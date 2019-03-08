@@ -11,7 +11,7 @@ type State struct {
 	Key        string
 	AESKey     []byte
 	Now        func() time.Time
-	MumbleAddr string
+	MurmurAddr string
 	BindAddr   string
 }
 
