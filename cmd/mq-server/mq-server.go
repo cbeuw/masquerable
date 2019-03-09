@@ -13,6 +13,7 @@ import (
 )
 
 var version string
+var verbose bool
 
 type msPair struct {
 	ms     net.Conn
@@ -127,14 +128,18 @@ func dispatchConnection(conn net.Conn, sta *server.State) {
 	data := buf[:i]
 	ch, err := server.ParseClientHello(data)
 	if err != nil {
-		log.Printf("+1 non masquerable non (or malformed) TLS traffic from %v\n", conn.RemoteAddr())
+		if verbose {
+			log.Printf("+1 non masquerable non (or malformed) TLS traffic from %v\n", conn.RemoteAddr())
+		}
 		goWeb(data)
 		return
 	}
 
 	isMq := server.IsMq(ch, sta)
 	if !isMq {
-		log.Printf("+1 non masquerable TLS traffic from %v\n", conn.RemoteAddr())
+		if verbose {
+			log.Printf("+1 non masquerable TLS traffic from %v\n", conn.RemoteAddr())
+		}
 		goWeb(data)
 		return
 	}
@@ -142,7 +147,9 @@ func dispatchConnection(conn net.Conn, sta *server.State) {
 	reply := server.ComposeReply(ch)
 	_, err = conn.Write(reply)
 	if err != nil {
-		log.Printf("Sending reply to remote: %v\n", err)
+		if verbose {
+			log.Printf("Sending TLS handshake reply to %v: %v\n", conn.RemoteAddr(), err)
+		}
 		go conn.Close()
 		return
 	}
@@ -152,7 +159,9 @@ func dispatchConnection(conn net.Conn, sta *server.State) {
 	for c := 0; c < 2; c++ {
 		_, err = server.ReadTLS(conn, discardBuf)
 		if err != nil {
-			log.Printf("Reading discarded message %v: %v\n", c, err)
+			if verbose {
+				log.Printf("Reading discarded message %v from %v: %v\n", c, conn.RemoteAddr(), err)
+			}
 			go conn.Close()
 			return
 		}
@@ -198,6 +207,7 @@ func main() {
 	flag.StringVar(&murmurAddr, "m", "127.0.0.1:64738", "murmurAddr: ip:port of the murmur server")
 	flag.StringVar(&bindAddr, "b", "0.0.0.0:443", "bindAddr: ip:port to bind and listen")
 	flag.StringVar(&key, "k", "test", "key: client must have the same key")
+	flag.BoolVar(&verbose, "V", false, "verbose: enable verbose logging")
 	askVersion := flag.Bool("v", false, "Print the version number")
 	printUsage := flag.Bool("h", false, "Print this message")
 	flag.Parse()
