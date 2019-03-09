@@ -216,7 +216,6 @@ func main() {
 		log.Fatal("Must specify redirAddr")
 	}
 
-	log.Printf("Listening on %v, Murmur on %v, Web on %v\n", bindAddr, murmurAddr, redirAddr)
 	sta := &server.State{
 		RedirAddr:  redirAddr,
 		MurmurAddr: murmurAddr,
@@ -224,14 +223,10 @@ func main() {
 		Now:        time.Now,
 	}
 
-	if sta.Key == "" {
-		log.Fatal("Key cannot be empty")
-	}
-
 	sta.SetAESKey()
 
 	listener, err := net.Listen("tcp", bindAddr)
-	log.Println("Listening on " + bindAddr)
+	log.Printf("Listening on %v, Murmur on %v, Web on %v\n", bindAddr, murmurAddr, redirAddr)
 	if err != nil {
 		log.Fatal(err)
 	}

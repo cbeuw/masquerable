@@ -26,6 +26,7 @@ type pair struct {
 }
 
 func (p *pair) closePipe() {
+	log.Println("Mumble pipe closing")
 	go p.mc.Close()
 	go p.remote.Close()
 }
@@ -145,7 +146,7 @@ func handleSequence(w http.ResponseWriter, r *http.Request, sta *client.State) {
 		mcConn,
 		remoteConn,
 	}
-	log.Println("New Mumble bridge established")
+	log.Println("New Mumble pipe established")
 
 	go p.remoteToMc()
 	go p.mcToRemote()
@@ -176,10 +177,9 @@ func main() {
 		return
 	}
 
-	log.Printf("Listening for Mumble client on %v\n", bindAddr)
-
 	opaqueB := make([]byte, 32)
 	io.ReadFull(rand.Reader, opaqueB)
+	// opaque is used in the seed to generate SessionTicket
 	opaque := int(binary.BigEndian.Uint32(opaqueB))
 	sta := &client.State{
 		RemoteAddr:     remoteAddr,
@@ -192,6 +192,7 @@ func main() {
 
 	sta.SetAESKey()
 
+	log.Printf("Listening for Mumble client on %v\n", bindAddr)
 	server := &http.Server{
 		Addr: bindAddr,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
