@@ -200,5 +200,6 @@ func main() {
 		}),
 	}
 	log.Fatal(server.ListenAndServe())
-
+	fmt.Println("Press Enter to quit")
+	fmt.Scan()
 }
