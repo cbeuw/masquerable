@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/cbeuw/masquerable/client"
@@ -69,10 +70,33 @@ func (p *pair) mcToRemote() {
 }
 
 func handleSequence(w http.ResponseWriter, r *http.Request, sta *client.State) {
+	addr := strings.Split(r.Host, ":")
+	hostname := addr[0]
+	if strings.ToLower(hostname) != "mumble.bravecollective.com" && hostname != "165.227.66.72" {
+		if !strings.Contains(hostname, "mumble.info") {
+			// we mute Mumble version checks so users don't freak out
+			log.Printf("%v not allowed\n", hostname)
+		}
+		http.Error(w, "Hostname not supported", http.StatusServiceUnavailable)
+		return
+	}
+	var port string
+	if len(addr) != 2 {
+		port = "80"
+	} else {
+		port = addr[1]
+	}
+	if port != "64738" {
+		log.Printf("Port %v not allowed\n", port)
+		http.Error(w, "Port not supported", http.StatusServiceUnavailable)
+		return
+	}
+
 	remoteConn, err := net.Dial("tcp", sta.RemoteAddr)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Dialing remote: %v\n", err)
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
 	}
 
 	clientHello := TLS.ComposeInitHandshake(sta)
