@@ -160,8 +160,8 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	flag.StringVar(&bindAddr, "l", "127.0.0.1:1081", "localAddr: ip:port of the HTTP proxy for mumble to connect to")
-	flag.StringVar(&remoteAddr, "r", "165.227.66.72:443", "remoteHost: ip:port of the mq-server")
-	flag.StringVar(&key, "k", "test", "key")
+	flag.StringVar(&remoteAddr, "r", "165.227.66.72:443", "remoteAddr: ip:port of the mq-server")
+	flag.StringVar(&key, "k", "test", "key: same as the key set on mq-server")
 	askVersion := flag.Bool("v", false, "Print the version number")
 	printUsage := flag.Bool("h", false, "Print this message")
 	flag.Parse()
