@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"io"
@@ -54,14 +55,16 @@ func (pair *webPair) remoteToServer() {
 }
 
 func (pair *msPair) remoteToServer() {
-	buf := make([]byte, 20480)
+	// 16kb + 5 bytes
+	buf := make([]byte, 16389)
 	for {
 		i, err := server.ReadTLS(pair.remote, buf)
 		if err != nil {
 			pair.closePipe()
 			return
 		}
-		data := server.PeelRecordLayer(buf[:i])
+		// PeelRecordLayer
+		data := buf[5:i]
 		_, err = pair.ms.Write(data)
 		if err != nil {
 			pair.closePipe()
@@ -71,15 +74,17 @@ func (pair *msPair) remoteToServer() {
 }
 
 func (pair *msPair) serverToRemote() {
-	buf := make([]byte, 10240)
+	// 16kb + 5 bytes
+	buf := make([]byte, 16389)
 	for {
-		i, err := io.ReadAtLeast(pair.ms, buf, 1)
+		i, err := io.ReadAtLeast(pair.ms, buf[5:], 1)
 		if err != nil {
 			pair.closePipe()
 			return
 		}
-		data := buf[:i]
-		data = server.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
+		data := buf[:i+5]
+		data[0], data[1], data[2] = 0x17, 0x03, 0x03
+		binary.BigEndian.PutUint16(data[3:5], uint16(i))
 		_, err = pair.remote.Write(data)
 		if err != nil {
 			pair.closePipe()

@@ -32,14 +32,15 @@ func (p *pair) closePipe() {
 }
 
 func (p *pair) remoteToMc() {
-	buf := make([]byte, 20480)
+	buf := make([]byte, 16389)
 	for {
 		i, err := client.ReadTLS(p.remote, buf)
 		if err != nil {
 			p.closePipe()
 			return
 		}
-		data := TLS.PeelRecordLayer(buf[:i])
+		// PeelRecordLayer
+		data := buf[5:i]
 		_, err = p.mc.Write(data)
 		if err != nil {
 			p.closePipe()
@@ -49,15 +50,16 @@ func (p *pair) remoteToMc() {
 }
 
 func (p *pair) mcToRemote() {
-	buf := make([]byte, 10240)
+	buf := make([]byte, 16389)
 	for {
-		i, err := io.ReadAtLeast(p.mc, buf, 1)
+		i, err := io.ReadAtLeast(p.mc, buf[5:], 1)
 		if err != nil {
 			p.closePipe()
 			return
 		}
-		data := buf[:i]
-		data = TLS.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
+		data := buf[:i+5]
+		data[0], data[1], data[2] = 0x17, 0x03, 0x03
+		binary.BigEndian.PutUint16(data[3:5], uint16(i))
 		_, err = p.remote.Write(data)
 		if err != nil {
 			p.closePipe()
